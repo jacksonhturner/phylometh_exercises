@@ -3,8 +3,7 @@ EEB 587 Week 6 Exercise
 Jackson Turner
 3/11/2022
 
-More verbose and complete version coming soon; this is a placeholder
-that will be updated shortly.
+More verbose version coming soon.
 
 Load our packages.
 
@@ -111,4 +110,77 @@ There is uncertainty in the maximum likelihood model doesn’t minimize
 the number of changes, but instead uses the data to determine the most
 likely tree, leading to uncertainty.
 
-Questions 1-4 coming soon\!
+Markov models are used to estimate transition rates between two discrete
+character states. Here I estimate the transition rates between the
+states for the “no barbs” trait.
+
+``` r
+k<-2 #number of states
+a1<-0.1 #instantaneous rate of change
+t1<-1 #amount in units time represented per branch length
+
+rate_of_0_to_0<-(1/k)+(((k-1)/(k))*exp(-k*a1*t1)) #rate of no barbs to no barbs
+cat("The transition rate from no barbs to no barbs is",rate_of_0_to_0)
+```
+
+    ## The transition rate from no barbs to no barbs is 0.9093654
+
+``` r
+rate_of_0_to_1<-(1/k)-(((k-1)/(k))*exp(-k*a1*t1)) #rate of no barbs to barbs
+cat("The transition rate from no barbs to barbs is",rate_of_0_to_1)
+```
+
+    ## The transition rate from no barbs to barbs is 0.09063462
+
+Now for the “barbs” trait.
+
+``` r
+a2<-0.2 #instantaneous rate of change
+t2<-1 #amount in units time represented per branch length
+
+rate_of_1_to_1<-(1/k)+(((k-1)/(k))*exp(-k*a2*t2)) #rate of barbs to barbs
+cat("The transition rate from no barbs to barbs is",rate_of_1_to_1)
+```
+
+    ## The transition rate from no barbs to barbs is 0.83516
+
+``` r
+rate_of_1_to_0<-(1/k)-(((k-1)/(k))*exp(-k*a2*t2)) #rate of barbs to no barbs
+cat("The transition rate from barbs to no barbs is",rate_of_1_to_0)
+```
+
+    ## The transition rate from barbs to no barbs is 0.16484
+
+If the parameters estimating the instantaneous rate of change and the
+amount in unit time represented per branch length were the equal, then
+so would the transition rate probabilities.
+
+My traits are all variable as defined in Lewis (2001), so the MKV model
+would make sense to use given my data. I attempt to use it below:
+
+``` r
+DE_given_TA<-0.8 #the probability of no barbs (assumed to be variable) given the time represented per branch length and our rate of change
+E<-0.9
+
+probability_no_barbs_given_para<-DE_given_TA/E
+cat("The probability of no barbs (variable) given the MkV model is",probability_no_barbs_given_para)
+```
+
+    ## The probability of no barbs (variable) given the MkV model is 0.8888889
+
+``` r
+DE_given_TA2<-0.05#the probability of barbs (assumed to be variable) given the time represented per branch length and our rate of change
+E2<-0.9
+
+probability_barbs_given_para<-DE_given_TA2/E2
+cat("The probability of barbs (variable) given the MkV model is",probability_barbs_given_para)
+```
+
+    ## The probability of barbs (variable) given the MkV model is 0.05555556
+
+The divergence order test (DOT), which is based on the average age of
+the nodes on a tree, weighted by the absolute magnitude of the contrast
+at each node for a particular trait, could be used to test the evolution
+of our states (Ackerly et al., (2006)).
+
+Last updated 3/12/22.
