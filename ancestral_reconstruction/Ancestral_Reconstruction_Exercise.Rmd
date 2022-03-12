@@ -3,10 +3,10 @@ title: "EEB 587 Week 6 Exercise"
 author: "Jackson Turner"
 date: "3/11/2022"
 output:
-  html_document:
+  html_document: 
 ---
 
-More verbose and complete version coming soon; this is a placeholder that will be updated very shortly. 
+More verbose and complete version coming soon; this is a placeholder that will be updated shortly. 
 
 Load our packages.
 
@@ -15,7 +15,6 @@ library(ape)
 library(geiger)
 library(phangorn)
 library(corHMM)
-library(readr)
 ```
 Load and format our data.
 ```{r, evaluate=TRUE}
@@ -53,6 +52,6 @@ anc.ml <- ancestral.pml(pml(tree, discrete.phyDat), type="ml") #using maximum li
 plotAnc(tree, anc.ml, 1) #pretty much the same but with more uncertainty
 ```
 
-There is uncertainty in the maximum likelihood model because it doesn't minimize the number of changes, but instead uses the data to determine the most likely tree, leading to uncertainty.
+There is uncertainty in the maximum likelihood model doesn't minimize the number of changes, but instead uses the data to determine the most likely tree, leading to uncertainty.
 
 Questions 1-4 coming soon!
