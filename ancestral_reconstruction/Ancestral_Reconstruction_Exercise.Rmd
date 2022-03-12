@@ -2,8 +2,7 @@
 title: "EEB 587 Week 6 Exercise"
 author: "Jackson Turner"
 date: "3/11/2022"
-output:
-  html_document: 
+output: github_document
 ---
 
 More verbose and complete version coming soon; this is a placeholder that will be updated shortly. 
