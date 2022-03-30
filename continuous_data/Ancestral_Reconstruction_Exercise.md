@@ -1,4 +1,4 @@
-EEB 587 Week 6 Exercise
+EEB 587 Week 7 Exercise
 ================
 Jackson Turner
 3/11/2022
