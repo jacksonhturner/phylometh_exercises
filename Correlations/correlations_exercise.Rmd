@@ -29,17 +29,25 @@ trait1<-primates$trait[,2]
 names(trait1)<-primates$trait[,1]
 primates$tree <- ape::multi2di(primates$tree)
 plotSimmap(make.simmap(primates$tree, trait1), pts=FALSE, fsize=0.8)
+
 rate.mat.er<-corHMM:::rate.mat.maker(rate.cat=1, hrm=FALSE, ntraits=1, nstates=2, model="ER")
 print(rate.mat.er)
+# Same rates
 
 pp.er<-corHMM(primates$tree,primates$trait[,c(1,2)],rate.cat=1,rate.mat=rate.mat.er,node.states="marginal")
 print(pp.er)
+# Forward and backward rates are the same; 1 and 2 will be about as common after lots of time.
 
 rate.mat.ard<-corHMM:::rate.mat.maker(rate.cat=1, hrm=FALSE, ntraits=1, nstates=2, model="ARD")
 print(rate.mat.ard)
+# Rates are different.
 
 pp.ard<-corHMM(primates$tree,primates$trait[,c(1,2)],rate.cat=1,rate.mat=rate.mat.ard,node.states="marginal")
 print(pp.ard)
+# Backward (2 to 1) has higher rate than forward; more 2 will appear after lots of time.
+
+# Which of these three is better?
+# pp.ard is probably better than pp.er because the rates are probably at least slightly different from each other in nature.
 
 rate.mat.er.4state<-corHMM:::rate.mat.maker(rate.cat=1, hrm=FALSE, ntraits=1, nstates=4, model="ER")
 print(rate.mat.er.4state)
@@ -87,8 +95,8 @@ print(rate.mat.pag94)
 
 ## Route 1
 
-```{r cars}
-pagelsim<-function(v00,v10,v01,v11){
+```{r}
+pagelsim<-function(v00,v10,v01,v11,silence_output=FALSE){
  
   r00t10<-6.9
   r00t01<-0.00121
@@ -113,7 +121,7 @@ steps_val<-0
 ding<-FALSE
 
 while((ding==FALSE)&(v00>0)&(v10>0)&(v01>0)&(v11>0)){
- 
+ if(silence_output==TRUE){
   r1<-runif(1,0,1)
  
   if((r1>0)&(r1<sr_sum[1])){
@@ -149,15 +157,78 @@ while((ding==FALSE)&(v00>0)&(v10>0)&(v01>0)&(v11>0)){
     v11<-v11-1
     v01<-v01+1
   }
-  if(ding==TRUE){
+  steps_val<-steps_val+1
+  states_end<<-c(v00,v10,v01,v11)
+ }else{
+  r1<-runif(1,0,1)
+ 
+  if((r1>0)&(r1<sr_sum[1])){
+    v00<-v00-1
+    v10<-v10+1
+  }
+  if((r1>sum(sr_sum[1]))&(r1<sum(sr_sum[1:2]))){
+    v00<-v00-1
+    v01<-v01+1
+  }
+  if((r1>sum(sr_sum[1:2]))&(r1<sum(sr_sum[1:3]))){
+    v10<-v10-1
+    v11<-v11+1
+  }
+  if((r1>sum(sr_sum[1:3]))&(r1<sum(sr_sum[1:4]))){
+    v10<-v10-1
+    v00<-v00+1
+  }
+  if((r1>sum(sr_sum[1:4]))&(r1<sum(sr_sum[1:5]))){
+    v01<-v01-1
+    v11<-v11+1
+  }
+  if((r1>sum(sr_sum[1:5]))&(r1<sum(sr_sum[1:6]))){
+    v01<-v01-1
+    v11<-v11+1
+    ding<-TRUE
+  }
+  if((r1>sum(sr_sum[1:6]))&(r1<sum(sr_sum[1:7]))){
+    v11<-v11-1
+    v10<-v10+1
+  }
+  if((r1>sum(sr_sum[1:7]))&(r1<sum(sr_sum[1:8]))){
+    v11<-v11-1
+    v01<-v01+1
+  }
+  if((ding==TRUE)){
     cat("Allele 01 has transferred to allele 11 after",steps_val,"time steps. The numbers of each allele are as follows: 00 =",v00,", 10 =",v10,", 01 =",v01,", 11 =",v11)
   }
   if((v00==0)|(v10==0)|(v01==0)|(v11==0)){
     cat("An allele has become extinct from this population after",steps_val,"time steps. The numbers of each allele are as follows: 00 =",v00,", 10 =",v10,", 01 =",v01,", 11 =",v11)
   }
   steps_val<-steps_val+1
-}
+  states_end<<-c(v00,v10,v01,v11)
+ }}
 }
 
-pagelsim(100,100,100,100)
+pagelsim(100,100,100,100) # try it out! change the number of starting alleles and the rates within the function. 
+
+# It tells you how many time steps it takes for 01 to transfer to 11 unless one of the alleles becomes extinct first.
+
+# Is 00 ever lost? This should tell us hopefully:
+
+n_attempts<-0
+states_end<-c(100,100,100,100)
+n_final<-as.vector(NULL)
+
+for(i in 1:100){
+  n_attempts<-0
+  states_end<-c(100,100,100,100)
+while(states_end[1]>0){
+  pagelsim(100,100,100,100,TRUE)
+  n_attempts<-n_attempts+1
+  if(states_end[1]==0){
+    cat("Run",i,": Allele 00 has become extinct after",n_attempts,"simulation runs.")
+  }
+}
+  n_final[i]<-n_attempts
+  cat("\n")
+}
+hist(n_final,xlab="Number of pagelsim runs before 00 extinction",ylab="Frequency",main="Frequency of the number of pagelsim runs before 00 extinction") # Yes, and not infrequently
 ```
+
