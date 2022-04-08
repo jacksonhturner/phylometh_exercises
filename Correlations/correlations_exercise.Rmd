@@ -1,0 +1,163 @@
+---
+title: "Correlations Exercise"
+author: "Jackson Turner"
+date: "4/7/2022"
+output: github_document
+---
+## Initial
+
+```{r}
+library(geiger)
+library(corHMM)
+library(ape)
+tree.primates <- read.tree(text="((((Homo:0.21,Pongo:0.21):0.28,Macaca:0.49):0.13,Ateles:0.62):0.38,Galago:1.00);") #using examples from ape ?pic
+X <- c(4.09434, 3.61092, 2.37024, 2.02815, -1.46968)
+Y <- c(4.74493, 3.33220, 3.36730, 2.89037, 2.30259)
+names(X) <- names(Y) <- c("Homo", "Pongo", "Macaca", "Ateles", "Galago")
+pic.X <- pic(X, tree.primates)
+pic.Y <- pic(Y, tree.primates)
+
+require("corHMM")
+data(primates)
+ls()
+print(primates)
+require(phytools)
+
+primates$trait[which(grepl("Hylobates",primates$trait[,1])),2]<-1
+
+trait1<-primates$trait[,2]
+names(trait1)<-primates$trait[,1]
+primates$tree <- ape::multi2di(primates$tree)
+plotSimmap(make.simmap(primates$tree, trait1), pts=FALSE, fsize=0.8)
+rate.mat.er<-corHMM:::rate.mat.maker(rate.cat=1, hrm=FALSE, ntraits=1, nstates=2, model="ER")
+print(rate.mat.er)
+
+pp.er<-corHMM(primates$tree,primates$trait[,c(1,2)],rate.cat=1,rate.mat=rate.mat.er,node.states="marginal")
+print(pp.er)
+
+rate.mat.ard<-corHMM:::rate.mat.maker(rate.cat=1, hrm=FALSE, ntraits=1, nstates=2, model="ARD")
+print(rate.mat.ard)
+
+pp.ard<-corHMM(primates$tree,primates$trait[,c(1,2)],rate.cat=1,rate.mat=rate.mat.ard,node.states="marginal")
+print(pp.ard)
+
+rate.mat.er.4state<-corHMM:::rate.mat.maker(rate.cat=1, hrm=FALSE, ntraits=1, nstates=4, model="ER")
+print(rate.mat.er.4state)
+
+rate.mat.ard.4state<-corHMM:::rate.mat.maker(rate.cat=1, hrm=FALSE, ntraits=1, nstates=4, model="ARD")
+print(rate.mat.ard.4state)
+
+rate.mat.gtr.4state<-rate.mat.ard.4state
+rate.mat.gtr.4state<-corHMM:::rate.par.eq(rate.mat.gtr.4state, c(1,4))
+rate.mat.gtr.4state<-corHMM:::rate.par.eq(rate.mat.gtr.4state, c(2,6))
+rate.mat.gtr.4state<-corHMM:::rate.par.eq(rate.mat.gtr.4state, c(3,8))
+rate.mat.gtr.4state<-corHMM:::rate.par.eq(rate.mat.gtr.4state, c(4,6))
+rate.mat.gtr.4state<-corHMM:::rate.par.eq(rate.mat.gtr.4state, c(5,7))
+rate.mat.gtr.4state<-corHMM:::rate.par.eq(rate.mat.gtr.4state, c(6,7))
+print(rate.mat.gtr.4state)
+
+fourstate.trait<-rep(NA,Ntip(primates$tree))
+for(i in sequence(Ntip(primates$tree))) {
+  if(primates$trait[i,2]==0 && primates$trait[i,3]==0) {
+    fourstate.trait[i]<-0
+  }
+  if(primates$trait[i,2]==0 && primates$trait[i,3]==1) {
+    fourstate.trait[i]<-1
+  }
+  if(primates$trait[i,2]==1 && primates$trait[i,3]==0) {
+    fourstate.trait[i]<-2
+  }
+  if(primates$trait[i,2]==1 && primates$trait[i,3]==1) {
+    fourstate.trait[i]<-3
+  }
+}
+fourstate.data<-data.frame(Genus_sp=primates$trait[,1], T1=fourstate.trait)
+
+print(rayDISC(primates$tree, fourstate.data, ntraits=1, rate.mat= rate.mat.gtr.4state, node.states="marginal", model="ARD"))
+
+print(rayDISC(primates$tree, fourstate.data, ntraits=1, model="ER", node.states="marginal"))
+print(rayDISC(primates$tree, fourstate.data, ntraits=1, rate.mat=rate.mat.er.4state, node.states="marginal", model="ARD"))
+rate.mat.ard.4state<-corHMM:::rate.mat.maker(rate.cat=1, hrm=FALSE, ntraits=1, nstates=4, model="ARD")
+print(rate.mat.ard.4state)
+
+print(corHMM:::rate.mat.maker(rate.cat=1, hrm=FALSE, ntraits=2, nstates=2, model="ARD"))
+rate.mat.pag94<-corHMM:::rate.par.drop(rate.mat.ard.4state, drop.par=c(3,5,8,10))
+print(rate.mat.pag94)
+```
+
+## Route 1
+
+```{r cars}
+pagelsim<-function(v00,v10,v01,v11){
+ 
+  r00t10<-6.9
+  r00t01<-0.00121
+  r10t11<-0.0172
+  r10t00<-6.9
+  r01t11<-0.00000000076
+  r01t00<-0.0121
+  r11t10<-0.017
+  r11t01<-0.00000000076
+  r_sum<-sum(c(r00t10,r00t01,r10t11,r10t00,r01t11,r01t00,r11t10,r11t01))
+  sr00t10<-r00t10/r_sum
+  sr00t01<-r00t01/r_sum
+  sr10t11<-r10t11/r_sum
+  sr10t00<-r10t00/r_sum
+  sr01t11<-r01t11/r_sum
+  sr01t00<-r01t00/r_sum
+  sr11t10<-r11t10/r_sum
+  sr11t01<-r11t01/r_sum
+  sr_sum<-c(sr00t10,sr00t01,sr10t11,sr10t00,sr01t11,sr01t00,sr11t10,sr11t01)
+   
+steps_val<-0
+ding<-FALSE
+
+while((ding==FALSE)&(v00>0)&(v10>0)&(v01>0)&(v11>0)){
+ 
+  r1<-runif(1,0,1)
+ 
+  if((r1>0)&(r1<sr_sum[1])){
+    v00<-v00-1
+    v10<-v10+1
+  }
+  if((r1>sum(sr_sum[1]))&(r1<sum(sr_sum[1:2]))){
+    v00<-v00-1
+    v01<-v01+1
+  }
+  if((r1>sum(sr_sum[1:2]))&(r1<sum(sr_sum[1:3]))){
+    v10<-v10-1
+    v11<-v11+1
+  }
+  if((r1>sum(sr_sum[1:3]))&(r1<sum(sr_sum[1:4]))){
+    v10<-v10-1
+    v00<-v00+1
+  }
+  if((r1>sum(sr_sum[1:4]))&(r1<sum(sr_sum[1:5]))){
+    v01<-v01-1
+    v11<-v11+1
+  }
+  if((r1>sum(sr_sum[1:5]))&(r1<sum(sr_sum[1:6]))){
+    v01<-v01-1
+    v11<-v11+1
+    ding<-TRUE
+  }
+  if((r1>sum(sr_sum[1:6]))&(r1<sum(sr_sum[1:7]))){
+    v11<-v11-1
+    v10<-v10+1
+  }
+  if((r1>sum(sr_sum[1:7]))&(r1<sum(sr_sum[1:8]))){
+    v11<-v11-1
+    v01<-v01+1
+  }
+  if(ding==TRUE){
+    cat("Allele 01 has transferred to allele 11 after",steps_val,"time steps. The numbers of each allele are as follows: 00 =",v00,", 10 =",v10,", 01 =",v01,", 11 =",v11)
+  }
+  if((v00==0)|(v10==0)|(v01==0)|(v11==0)){
+    cat("An allele has become extinct from this population after",steps_val,"time steps. The numbers of each allele are as follows: 00 =",v00,", 10 =",v10,", 01 =",v01,", 11 =",v11)
+  }
+  steps_val<-steps_val+1
+}
+}
+
+pagelsim(100,100,100,100)
+```
