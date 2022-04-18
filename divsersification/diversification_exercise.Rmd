@@ -1,0 +1,168 @@
+---
+title: "Diversification"
+author: "Jackson Turner"
+date: "4/18/2022"
+output: github_document
+---
+
+## Diversification Exercise
+
+```{r}
+library(ape)
+library(TreeSim)
+library(geiger)
+library(diversitree)
+library(hisse)
+
+my.tree <- TreeSim::sim.bd.taxa(n=300, numbsim=1, lambda=0.1, mu=0)[[1]]
+
+ape::ltt.plot(my.tree)
+
+ape::ltt.plot(my.tree, log="y")
+
+yule.trees <- TreeSim::sim.bd.taxa(n=300, numbsim=10, lambda=0.1, mu=0, complete=FALSE)
+
+bd.trees <- TreeSim::sim.bd.taxa(n=300, numbsim=10, lambda=1, mu=.9, complete=FALSE)
+ape::mltt.plot(bd.trees, log="y", legend=FALSE)
+
+depth.range <- range(unlist(lapply(yule.trees,ape::branching.times)), unlist(lapply(bd.trees,ape::branching.times)))
+max.depth <- sum(abs(depth.range)) #ape rescales depths
+plot(x=c(0, -1*max.depth), y=c(1, ape::Ntip(yule.trees[[1]])), log="y", type="n", bty="n", xlab="Time", ylab="N")
+colors=c(rgb(1,0,0,0.5), rgb(0, 0, 0, 0.5))
+list.of.both <- list(bd.trees, yule.trees)
+for (i in sequence(2)) {
+  tree.list <- list.of.both[[i]]
+  for (j in sequence(length(tree.list))) {
+    ape::ltt.lines(tree.list[[j]], col=colors[[i]])
+  }
+}
+legend("topleft", legend=c("Birth Death", "Yule"), fill=colors)
+
+  depth.range <- range(unlist(lapply(yule.trees,ape::branching.times)), unlist(lapply(bd.trees,ape::branching.times)))
+max.depth <- sum(abs(depth.range)) #ape rescales depths
+plot(x=c(0, -5), y=c(200, ape::Ntip(yule.trees[[1]])), log="y", type="n", bty="n", xlab="Time", ylab="N")
+colors=c(rgb(1,0,0,0.5), rgb(0, 0, 0, 0.5))
+list.of.both <- list(bd.trees, yule.trees)
+for (i in sequence(2)) {
+  tree.list <- list.of.both[[i]]
+  for (j in sequence(length(tree.list))) {
+    ape::ltt.lines(tree.list[[j]], col=colors[[i]])
+  }
+}
+legend("topleft", legend=c("Birth Death", "Yule"), fill=colors)
+```
+```{r}
+my_lambda<-c(0.1,0.5,0.5,1,1,2,5,10)
+my_mu<-c(0.05,0.25,0.4,0.95,0.25,1,4,9.7)
+
+for(i in 1:length(my_lambda)){
+  if(i==1){
+  }
+  
+  my_temp_lambda<-my_lambda[i]
+  my_temp_mu<-my_mu[i]
+  temp_title<-paste("lambda =",my_lambda[i],"mu =",my_mu[i])
+  
+  temp_tree<-sim.bd.taxa(n=200, numbsim=10, lambda=my_temp_lambda, mu=my_temp_mu, complete=FALSE)
+  mltt.plot(temp_tree, log="y", legend=FALSE)
+  title(main=temp_title)
+}
+```
+
+```{r}
+speciation.rates <- c(0.1, 0.1, 0.1, 0.2) #0A, 1A, 0B, 1B
+extinction.rates <- rep(0.03, 4)
+transition.rates <- c(0.01,0.01,0, 0.01, 0, 0.01, 0.01,0,0.01, 0,0.01,0.01)
+pars <- c(speciation.rates, extinction.rates, transition.rates)
+phy <- tree.musse(pars, max.taxa=50, x0=1, include.extinct=FALSE)
+sim.dat.true <- data.frame(names(phy$tip.state), phy$tip.state)
+sim.dat <- sim.dat.true
+# Now to hide the "hidden" state
+sim.dat[sim.dat[,2]==3,2] = 1
+sim.dat[sim.dat[,2]==4,2] = 2
+# and convert states 1,2 to 0,1
+sim.dat[,2] = sim.dat[,2] - 1
+
+plot(phy)
+knitr::kable(cbind(sim.dat, true.char=sim.dat.true$phy.tip.state))
+
+turnover.anc = c(1,1,0,0)
+eps.anc = c(1,1,0,0)
+
+turnover.anc = c(1,2,0,0)
+
+turnover.anc = c(1,2,3,4)
+
+eps.anc = c(0,0,0,0)
+
+trans.rates = TransMatMaker.old(hidden.states=TRUE)
+trans.rates
+
+trans.rates.nodual = ParDrop(trans.rates, c(3,5,8,10))
+trans.rates.nodual
+
+trans.rates.nodual.equal16 = ParEqual(trans.rates.nodual, c(1,6))
+trans.rates.nodual.equal16
+
+trans.rates.nodual.allequal = ParEqual(trans.rates.nodual, c(1,2,1,3,1,4,1,5,1,6,1,7,1,8))
+trans.rates.nodual.allequal
+
+trans.rates.nodual.allequal = trans.rates.nodual
+trans.rates.nodual.allequal[!is.na(trans.rates.nodual.allequal) & !trans.rates.nodual.allequal == 0] = 1
+trans.rates.nodual.allequal
+
+trans.rates.bisse = TransMatMaker.old(hidden.states=FALSE)
+trans.rates.bisse
+
+pp = hisse.old(phy, sim.dat, f=c(1,1), hidden.states=TRUE, turnover.anc=turnover.anc,
+               eps.anc=eps.anc, trans.rate=trans.rates.nodual.allequal)
+
+pp = hisse.old(phy, sim.dat, f=c(1,1), hidden.states=TRUE, turnover.anc=turnover.anc,
+               eps.anc=eps.anc, trans.rate=trans.rates.nodual.allequal, output.type="net.div")
+
+turnover.anc = c(1,1,2,2)
+eps.anc = c(1,1,2,2)
+
+trans.rates = TransMatMaker.old(hidden.states=TRUE)
+trans.rates.nodual = ParDrop(trans.rates, c(3,5,8,10))
+
+trans.rates.nodual.allequal = ParEqual(trans.rates.nodual, c(1,2,1,3,1,4,1,5,1,6,1,7,1,8))
+trans.rates.nodual.allequal
+
+# Now we want three specific rates:
+trans.rates.nodual.threerates <- trans.rates.nodual
+# Set all transitions from 0->1 to be governed by a single rate:
+to.change <- cbind(c(1,3), c(2,4))
+trans.rates.nodual.threerates[to.change] = 1
+# Now set all transitions from 1->0 to be governed by a single rate:
+to.change <- cbind(c(2,4), c(1,3))
+trans.rates.nodual.threerates[to.change] = 2
+# Finally, set all transitions between the hidden state to be a single rate (essentially giving
+# you an estimate of the rate by which shifts in diversification occur:
+to.change <- cbind(c(1,3,2,4), c(3,1,4,2))
+trans.rates.nodual.threerates[to.change] = 3
+trans.rates.nodual.threerates
+
+pp = hisse.old(phy, sim.dat, f=c(1,1), hidden.states=TRUE, turnover.anc=turnover.anc,
+           eps.anc=eps.anc, trans.rate=trans.rates.nodual.allequal)
+
+load("testrecon1.rda")
+class(pp.recon)
+pp.recon
+
+plot.hisse.states(pp.recon, rate.param="net.div", show.tip.label=FALSE)
+
+plot.hisse.states(pp.recon, rate.param="net.div", show.tip.label=FALSE, rate.range=c(0,0.072))
+
+pp.recon$aic
+
+hisse.results.list = list()
+load("testrecon1.rda")
+hisse.results.list[[1]] = pp.recon
+load("testrecon2.rda")
+hisse.results.list[[2]] = pp.recon
+load("testrecon3.rda")
+hisse.results.list[[3]] = pp.recon
+# Now supply the list the plotting function
+plot.hisse.states(hisse.results.list, rate.param="net.div", show.tip.label=FALSE, rate.range=c(0,0.072))
+```
