@@ -7,11 +7,10 @@ Jackson Turner
 
 20 pts | Create \[MANY\] randomly-simulated trees.
 
-25 pts | Compare shared clades between \[my tree\] and simulated trees
-using different methods
+25 pts | Compare shared clades between my endosymbiont tree and
+simulated trees using different methods.
 
-25 pts | Create a pretty and easily interpreted graphs using multiple
-methods
+25 pts | Create pretty and interpretable graphs using multiple methods.
 
-30 pts | Evaluate whether \[my tree\] is likely to appear within these
-simulations
+30 pts | Evaluate whether my endosymbiont tree is likely to appear
+within these simulations.
