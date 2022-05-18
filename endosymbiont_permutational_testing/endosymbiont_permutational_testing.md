@@ -187,8 +187,8 @@ abline(v=NJ_endosymbiont_tree_overlapping_clades,lwd=3,col="blue")
 
 <img src="endosymbiont_permutational_testing_files/figure-gfm/chunk_11-1.png" width="200%" height="200%" />
 
-The neighbor-joining endosymbiont tree also shares 11 clades with the
-host tree – we similarly cannot reject our null hypothesis.
+The neighbor-joining endosymbiont tree shares 11 clades with the host
+tree – we similarly cannot reject our null hypothesis.
 
 Now we’ll test perform this test with other types of randomly generated
 trees (`rtree()` and `treesim()`) to see if we get similar results.
@@ -290,8 +290,8 @@ abline(v=NJ_endosymbiont_tree_overlapping_clades,lwd=3,col="blue")
 Our results of this test (and even the distribution generated) using
 `rtree()` are the same as using `rcoal()`.
 
-Since the UPGMA and NJ trees share the exact same number of clades (11)
-with our host tree, are the clades they share the same ones?
+Since the UPGMA and NJ trees share a similar number of clades with our
+host tree, are any of the clades they share the same ones?
 
 For the UPGMA endosymbiont tree:
 
